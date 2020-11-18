@@ -42,6 +42,7 @@ homicide_df =
   filter(city_state != "Tulsa_AL")
 ```
 
+
 Let's look at this a bit
 
 ```{r}
@@ -124,7 +125,8 @@ longstudy_df %>%
   geom_line(aes(group = as.factor(id)),alpha = .5) +
   theme(
     axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)
-    )
+    ) +
+  ggtitle("Observations for control group and experiment group")
 ```
 
 From this spaghetti plot, we could see that experiment group and control group start from the close observation value. Then the general trend of experiment group is increasing, while control group seems like to remain unchanged. This comment only indicate the overall trend for each group as we can see that observations are oscillating over time for each subject.
@@ -238,11 +240,12 @@ prop_pl %>%
   geom_bar(stat="identity") +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
   ggtitle("The proportion of times the null was rejected") +
-  ylab("estimate proportion")
+  ylab("estimate proportion") +
+  xlab("True μ value") 
 
 ```
 
-From this plot, we could see that as the effect size of the difference between sample mean and hypothesis population mean  increases, the power of the test that rejects the null hypothesis is increasing
+From this plot, we could see that as the effect size of the difference between sample mean and hypothesis population mean  increases, the power of the test that rejects the null hypothesis is increasing. And when the true μ >= 4, the proportion of times the null was rejected is approximately to 1.00, which means the power of rejecting H0 gets close to 1.
 
 
 Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected :
@@ -269,9 +272,16 @@ clean_outp_test %>%
   geom_point(data = null_rej_pl, aes(color = 'b')) +
   scale_color_manual(name = 'samples', 
                      values =c('b'='blue','a'='orange'), 
-                     labels = c('all samples(reject and fail to reject','samples for the null was reject')) +
-  ylab("Average Estimate Miu") +
-  xlab("True Miu")
+                     labels = c('all samples(reject or fail to reject)','samples for the null was rejected')) +
+  scale_x_continuous(breaks=c(0, 1, 2, 3, 4, 5, 6)) +
+  ylab("Average Estimate μ") +
+  xlab("True μ") +
+  ggtitle("True μ vs estimate μ of samplles for the null was rejected")
 
 ```
 
+From above plot, we can easily know that the average estimate μ in samples for which the null was rejected or fail to be rejected is equal to the true μ since the sample size is 30 and we repeat t.test 5000 times for each μ value.  
+The sample average of estimate μ across tests for which the null is rejected is approximately  equal to the true value of μ when true value of μ is equal to 0, 4, 5, or 6.  
+Since we use μ = 0 for hypothesis test and normal distribution is symmetric at x = 0, the estimate μ for which the null is rejected should be symmetric distribution at x = 0. Therefore, the average of estimate μ for which the null is rejected is very close to zero(the true μ).  
+From the previous plot :The proportion of times the null was rejected, we know that the proportion of times the null was rejected is approximately to 1.00 when the true μ >= 4. As the power of rejecting H0 gets very close to 1, the null was rejected for almost each sample of 5000 total samples. That's why, the sample average of estimate μ across tests for which the null is rejected is approximately  equal to the true value of μ when true value of μ is equal to 4, 5, or 6.  
+For other true μ values(μ =1,2,or 3), the effect size is small and the power of rejecting H0 is far away from the 1. Since there are many sample estimate  μ for which we fail to reject the null when μ = 1, 2 or 3,  the sample average of μ̂  across tests for which the null is rejected is not equal to the true value of μ.
