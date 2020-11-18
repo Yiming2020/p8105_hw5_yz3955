@@ -3,7 +3,7 @@ title: "Homework 5 "
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r, setup, include=FALSE}
 library(tidyverse)
 
 knitr::opts_chunk$set(
@@ -93,7 +93,7 @@ results_df %>%
 ## Problem 2
 
 combine csv files in to a data frame
-```{r}
+```{r message=FALSE, warning=FALSE}
 longstudy_df = 
   tibble(
     path = list.files("lda_data")
@@ -128,3 +128,32 @@ longstudy_df %>%
 ```
 
 From this spaghetti plot, we could see that experiment group and control group start from the close observation value. Then the general trend of experiment group is increasing, while control group seems like to remain unchanged. This comment only indicate the overall trend for each group as we can see that observations are oscillating over time for each subject.
+
+
+## Problem 3
+
+build a function about how to calculate the estimate and p -value
+```{r}
+sim_t_test = function(n = 30, mu, sigma = 5) {
+  
+  sim_data = tibble(
+    x = rerun(5000, rnorm(n, mean = mu, sd = sigma)))
+  
+  sim_data %>% 
+    mutate(
+      t_test = map(.x = x, ~t.test(.x, mu = 0, paird = FALSE,
+                                   conf.level = 0.95)),
+      tidy_t_test = map(.x = t_test, ~broom::tidy(.x))
+      ) %>% 
+  select(-t_test) %>% 
+  unnest(tidy_t_test) %>% 
+  select(estimate, p.value)
+}
+```
+
+```{r}
+sim_t_test(mu = 0) 
+
+   
+```
+
