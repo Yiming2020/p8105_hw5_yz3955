@@ -3,7 +3,7 @@ title: "Homework 5 "
 output: github_document
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include=FALSE}
 library(tidyverse)
 
 knitr::opts_chunk$set(
@@ -29,7 +29,7 @@ Read in the data
 
 ```{r}
 homicide_df = 
-  read.csv("./data/homicide-data.csv") %>% 
+  read.csv("./homicide_data/homicide-data.csv") %>% 
   mutate(
     city_state = str_c(city, state, sep = "_"),
     resolved = case_when(
@@ -90,3 +90,41 @@ results_df %>%
 ```
 
 
+## Problem 2
+
+combine csv files in to a data frame
+```{r}
+longstudy_df = 
+  tibble(
+    path = list.files("lda_data")
+    ) %>% 
+  mutate(
+    path = str_c("lda_data/", path),
+    data = map(.x = path, ~read_csv(.x)),
+    path = str_remove(path, "lda_data/"),
+    path = str_remove(path, ".csv")) %>% 
+  unnest() %>% 
+  separate(path, into = c("arm", "subject_id"),sep = "_") %>% 
+  mutate(
+    arm = ifelse(arm == "con", "Control", "Experiment")
+  ) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week_number",
+    values_to = "observations"
+  )
+```
+
+Make a spaghetti plot
+
+```{r}
+longstudy_df %>% 
+  unite("id", c(arm, subject_id), sep = "_", remove = F) %>% 
+  ggplot(aes(x = week_number, y = observations, color = arm)) +
+  geom_line(aes(group = as.factor(id)),alpha = .5) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1)
+    )
+```
+
+From this spaghetti plot, we could see that experiment group and control group start from the close observation value. Then the general trend of experiment group is increasing, while control group seems like to remain unchanged. This comment only indicate the overall trend for each group as we can see that observations are oscillating over time for each subject.
