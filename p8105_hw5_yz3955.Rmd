@@ -201,16 +201,45 @@ sim_t_test = function(n = 30, mu, sigma = 5, method = "two_sided") {
 
 for miu = 0, 1, 2, 3, 4, 5, 6
 ```{r}
+set.seed(1)
+
 clean_outp_test = 
   tibble(
     miu_value = c(0, 1, 2, 3, 4, 5, 6)) %>% 
     mutate(output_lists = map(.x = miu_value, ~sim_t_test(mu = .x))) %>% 
     unnest(output_lists)
+
+clean_outp_test
    
 ```
 
 Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
 ```{r}
+prop_pl =
+  clean_outp_test %>% 
+  group_by(miu_value) %>% 
+  summarize(
+    reject = sum(accept_h0 == "Reject"),
+    total  = n()
+  ) %>% 
+  mutate(
+    prop = map2(.x = reject, .y = total, ~prop.test(x = .x, n = .y)),
+    tidy_test = map(.x = prop, ~broom::tidy(.x))
+  ) %>% 
+  select(-prop) %>% 
+  unnest(tidy_test) %>% 
+  select(miu_value, estimate, conf.low, conf.high)
+
+prop_pl %>%
+  mutate(
+    miu_value = as.factor(miu_value)
+  ) %>% 
+  ggplot(aes(x = miu_value, y = estimate, fill = miu_value)) +
+  geom_bar(stat="identity") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  ggtitle("The proportion of times the null was rejected")
+  ylab("estimate proportion")
 
 ```
 
+From this plot, we could see that as the effect size of the difference between sample mean and hypothesis population mean  increases, the power of the test that rejects the null hypothesis is increasing
